@@ -37,7 +37,6 @@ async function openFile(file){
  if(!file)return;
  const version=++request;
  if(!/\.jpe?g$/i.test(file.name)&&file.type!=='image/jpeg'){status.textContent='Please choose a JPEG (.jpg or .jpeg) file.';return;}
- if(file.size>100*1024*1024){status.textContent='Choose a JPEG smaller than 100 MB.';return;}
  status.textContent='Opening '+file.name+'…';
  const url=URL.createObjectURL(file),im=new Image();
  try{
