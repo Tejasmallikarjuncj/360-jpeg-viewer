@@ -6,7 +6,7 @@
   <meta name="description" content="Open a JPEG panorama and explore it in 360 degrees. Images stay on your device.">
   <title>360° JPEG Viewer</title>
   <link rel="stylesheet" href="style.css">
-  <script src="viewer.js" defer></script>
+  <script src="viewer.js?v=ipad-2" defer></script>
 </head>
 <body>
 <main id="app">
@@ -14,7 +14,8 @@
   <img id="flat" alt="Selected JPEG" hidden>
   <header>
     <a class="brand" href="./">360° <span>JPEG Viewer</span></a>
-    <label class="button primary">Open JPEG<input id="file" type="file" accept="image/jpeg,.jpg,.jpeg"></label>
+    <button id="open" class="button primary" type="button">Open JPEG</button>
+    <input id="file" type="file" accept="image/jpeg,.jpg,.jpeg" hidden>
   </header>
   <section id="empty">
     <div class="orb" aria-hidden="true">360°</div>
