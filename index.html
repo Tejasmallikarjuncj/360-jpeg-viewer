@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Open a JPEG panorama and explore it in 360 degrees. Images stay on your device.">
   <title>360° JPEG Viewer</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="viewer.js?v=ipad-3" defer></script>
+  <link rel="stylesheet" href="style.css?v=cloud-1">
+  <script src="viewer.js?v=cloud-1" defer></script>
 </head>
 <body>
 <main id="app">
@@ -14,8 +14,9 @@
   <img id="flat" alt="Selected JPEG" hidden>
   <header>
     <a class="brand" href="./">360° <span>JPEG Viewer</span></a>
-    <button id="open" class="button primary" type="button">Open JPEG</button>
+    <div class="header-actions"><button id="cloud" type="button">Cloud import</button><button id="open" class="button primary" type="button">Open JPEG</button></div>
     <input id="file" type="file" accept="image/jpeg,.jpg,.jpeg" hidden>
+    <input id="cloud-file" type="file" hidden>
   </header>
   <section id="empty">
     <div class="orb" aria-hidden="true">360°</div>
@@ -36,5 +37,19 @@
     <small>Drag to rotate · Scroll or pinch to zoom · Arrow keys to explore</small>
   </footer>
 </main>
+<dialog id="cloud-dialog" aria-labelledby="cloud-title">
+  <div class="dialog-heading"><h2 id="cloud-title">Import from the cloud</h2><button id="cloud-close" aria-label="Close cloud import" type="button">✕</button></div>
+  <button id="cloud-browse" class="primary" type="button">Browse cloud files</button>
+  <p class="muted">On iPad, choose Browse, then a location such as iCloud Drive. Other providers appear when available in your device’s file picker.</p>
+  <hr>
+  <form id="cloud-form">
+    <label for="cloud-url">Or paste a direct JPEG link</label>
+    <input id="cloud-url" type="url" placeholder="https://example.com/panorama.jpg" required autocomplete="off" spellcheck="false">
+    <p class="muted">Use a public HTTPS image URL that allows browser downloads. Drive and other sharing-page links may not work; use Browse cloud files instead.</p>
+    <button id="cloud-submit" class="primary" type="submit">Import link</button>
+    <p id="cloud-status" role="status" aria-live="polite"></p>
+  </form>
+  <small>Images are opened in this browser. Link imports contact the image host; this viewer does not upload your files.</small>
+</dialog>
 </body>
 </html>

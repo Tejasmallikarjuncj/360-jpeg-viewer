@@ -28,6 +28,7 @@ if(graphicsError)status.textContent=graphicsError;
 const mobileDevice= /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const maxDisplayPixels=mobileDevice?4*1024*1024:16*1024*1024;
 let image=null, imageURL=null, request=0, frame=0, filename='', warning='';
+let cloudRequest=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function render(){
  frame=0;if(!image||mode.value==='flat'||!gl||gl.isContextLost())return;
@@ -54,6 +55,7 @@ function loadImage(im,url){
 }
 async function openFile(file){
  if(!file)return;
+ if(cloudRequest){cloudRequest.abort();cloudRequest=null;}
  const version=++request;
  if(/\.hei[cf]$/i.test(file.name)||/^image\/hei[cf](?:-sequence)?$/i.test(file.type)){
   status.textContent='This is a HEIC/HEIF photo. Export or convert it to JPEG (.jpg), then open the JPEG here. Renaming the extension will not convert it.';
@@ -92,6 +94,44 @@ async function openFile(file){
 }
 $('open').addEventListener('click',()=>{$('file').click();});
 $('file').addEventListener('change',async e=>{const input=e.target;await openFile(input.files[0]);input.value='';});
+const cloudDialog=$('cloud-dialog');
+function cancelCloudImport(){
+ if(cloudRequest){cloudRequest.abort();cloudRequest=null;++request;}
+ $('cloud-submit').disabled=false;$('cloud-status').textContent='';
+}
+$('cloud').onclick=()=>cloudDialog.showModal();
+$('cloud-close').onclick=()=>cloudDialog.close();
+cloudDialog.addEventListener('close',cancelCloudImport);
+cloudDialog.addEventListener('cancel',cancelCloudImport);
+$('cloud-browse').onclick=()=>{$('cloud-file').click();};
+$('cloud-file').addEventListener('change',async e=>{
+ const input=e.target,file=input.files[0];if(!file)return;
+ cancelCloudImport();cloudDialog.close();await openFile(file);input.value='';
+});
+$('cloud-form').addEventListener('submit',async e=>{
+ e.preventDefault();cancelCloudImport();
+ let url;
+ try{url=new URL($('cloud-url').value.trim());if(url.protocol!=='https:'||url.username||url.password)throw Error();}
+ catch{$('cloud-status').textContent='Enter a public HTTPS image link without a username or password.';return;}
+ const controller=new AbortController();cloudRequest=controller;const version=++request;
+ $('cloud-submit').disabled=true;$('cloud-status').textContent='Downloading image…';
+ try{
+  const response=await fetch(url.href,{signal:controller.signal,credentials:'omit',referrerPolicy:'no-referrer'});
+  if(!response.ok)throw Error('The link could not be downloaded. Check access or use Browse cloud files.');
+  const blob=await response.blob();if(version!==request)return;
+  const bytes=new Uint8Array(await blob.slice(0,16).arrayBuffer());if(version!==request)return;
+  // Check the downloaded content rather than treating a sharing page as a JPEG.
+  const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
+  const heic=/^image\/hei[cf]/i.test(blob.type)||/\.hei[cf]$/i.test(url.pathname);
+  if(!jpeg&&!heic)throw Error('This link did not return a JPEG. Use a direct image link or Browse cloud files.');
+  let name;try{name=decodeURIComponent(url.pathname.split('/').pop());}catch{name='';}
+  if(!name||!(/\.(jpe?g|hei[cf])$/i.test(name)))name=heic?'cloud-photo.heic':'cloud-panorama.jpg';
+  cloudRequest=null;cloudDialog.close();
+  await openFile(new File([blob],name,{type:heic?blob.type||'image/heic':'image/jpeg'}));
+ }catch(error){
+  if(version===request&&!controller.signal.aborted)$('cloud-status').textContent=error instanceof TypeError?'The host blocked the download or the connection failed. Use Browse cloud files instead.':error.message;
+ }finally{if(cloudRequest===controller)cloudRequest=null;if(version===request)$('cloud-submit').disabled=false;}
+});
 const app=$('app');
 for(const event of ['dragenter','dragover'])app.addEventListener(event,e=>{e.preventDefault();app.classList.add('dragover');});
 app.addEventListener('dragleave',e=>{if(!app.contains(e.relatedTarget))app.classList.remove('dragover');});
