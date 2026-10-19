@@ -4,6 +4,8 @@ A dependency-free panorama viewer. Open a JPEG using the file picker or drag and
 
 There is no application file-size limit. Browser memory and image-decoding limits still apply. Large images are resized for the graphics device before rendering.
 
+JPEGs load through image load/error events, without Image.decode(). If WebGL is unavailable, images open in flat view. HEIC/HEIF files receive a separate message asking you to export or convert them to JPEG; the viewer does not convert HEIC files.
+
 Drag or swipe to rotate, scroll or pinch to zoom, use the arrow keys to look around, or use the reset and fullscreen controls. Images are decoded locally and are never uploaded. A regular photograph cannot provide unseen surroundings or true 3D geometry.
 
 Open index.html locally, or serve the directory with `python -m http.server 8080`. GitHub Pages serves index.html from the main branch root. No build or dependencies are required.

@@ -45,18 +45,25 @@ function setMode(){
  for(const id of ['in','out','reset'])$(id).disabled=flat||!image;
  status.textContent=filename+(flat?' · Flat image'+(graphicsError?' · '+graphicsError:''):` · 360° panorama${warning}`);redraw();
 }
+function loadImage(im,url){
+ return new Promise((resolve,reject)=>{
+  im.onload=()=>resolve();
+  im.onerror=()=>reject(Error('Could not read this JPEG on this device. If it is in iCloud, download it in Files first and select it again.'));
+  im.src=url;
+ });
+}
 async function openFile(file){
  if(!file)return;
  const version=++request;
+ if(/\.hei[cf]$/i.test(file.name)||/^image\/hei[cf](?:-sequence)?$/i.test(file.type)){
+  status.textContent='This is a HEIC/HEIF photo. Export or convert it to JPEG (.jpg), then open the JPEG here. Renaming the extension will not convert it.';
+  return;
+ }
  if(!/\.jpe?g$/i.test(file.name)&&file.type!=='image/jpeg'){status.textContent='Please choose a JPEG (.jpg or .jpeg) file.';return;}
  status.textContent='Opening '+file.name+'…';
  const url=URL.createObjectURL(file),im=new Image();
  try{
-  await new Promise((resolve,reject)=>{
-   im.onload=resolve;
-   im.onerror=()=>reject(Error('Could not read this JPEG on this device. If it is in iCloud, download it in Files first and select it again.'));
-   im.src=url;
-  });
+  await loadImage(im,url);
   if(version!==request){URL.revokeObjectURL(url);return;}
   if(gl&&!gl.isContextLost()){
    // Bound both dimensions and pixel area: a GPU's maximum texture size is not a memory budget.
